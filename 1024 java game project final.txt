@@ -1,0 +1,182 @@
+1024 JAVA GAME PROJECT ( CONSOLE BASED )
+
+
+import java.util.Random;  // util-----package    Random ------ class --- used for generating random nums
+import java.util.Scanner;  // util ------ package   Scanner ----- class --- used for taking inputs
+
+public class Game1024 {                              //hamari class game ki class 
+    private static final int SIZE = 4;              //static ---- access only to this class   final ----- constant cant be changed
+    private int[][] board;                               // board ek 2d array banaya int datatype ka 
+    private Random random;                       // Random class ka random object banaya hai    reference hai ye kyuki new likhke memory nahi diya hai
+    private Scanner scanner;                       //  sameeeee
+
+    public Game1024() {                           //default constructor banaya hai ------  initialize wala kaam karne ke liye
+        board = new int[SIZE][SIZE];         // 2d array board ko memory diya
+        random = new Random();             // random jo Random class ka object tha usse bhi memory de di
+        scanner = new Scanner(System.in);   // Scanner class ke object ko memory de di aur parameter me input le rahe hai
+        addRandomTile();                             // ye function call hai         addRandomTile naam ka function
+        addRandomTile();                             // sameeeeeee
+    }
+
+    public void play() {                             // play ek function/method hai                play iss pure program ka raja hai
+        while (true) {                                //infinite loop  always true  
+            printBoard();                             //function call kiya hai              printBoard naam ka function hai jo board print karega
+            if (isGameOver()) {                                //isGameOver naam ka function hai agar usne 1 diya yani true toh gameover print hoga tab ham loop se bahar ayenge  while wala
+                System.out.println("Game Over!");
+                break;
+            }
+            System.out.print("Enter move (W/A/S/D): ");    // agar 1 true nahi toh ye execute hoga
+            String move = scanner.nextLine().toUpperCase();          //yaha pe string me lenge na input toh user lowercase me daal sakta hai lekin hamne toh switch case me capital likha hai isliye toUpperCase method use kiya for making user ka input uppercase
+            switch (move) {
+                case "W": if (moveUp()) addRandomTile(); break;
+                case "S": if (moveDown()) addRandomTile(); break;
+                case "A": if (moveLeft()) addRandomTile(); break;
+                case "D": if (moveRight()) addRandomTile(); break;
+                default: System.out.println("Invalid move! Use W/A/S/D."); continue;
+            }
+        }
+    }
+
+    private void printBoard() {               //printBoard method           board ko print karega    board is nothing but 2d array
+    for (int i = 0; i < SIZE; i++) {             //2d array hai na toh do loop hoga                i = row j = col
+        for (int j = 0; j < SIZE; j++) {
+            System.out.printf("%4d ", board[i][j]);           //4d for proper alignment    d , 2d , 3d ese use kar sakte hai for proper alignment
+        }
+        System.out.println();            //new line pe next row ayega
+    }
+    System.out.println();                         // ek line chodhenge after printing board
+}
+
+private boolean isGameOver() {            //boolean data type kyuki ye true ya false return karega
+    for (int i = 0; i < SIZE; i++) {          
+        for (int j = 0; j < SIZE; j++) {
+            if (board[i][j] == 0) return false; // Empty space available
+            if (j < SIZE - 1 && board[i][j] == board[i][j + 1]) return false; // Adjacent horizontal tiles can merge   // therefore merge hone ke baad empty space reh jayega
+
+            if (i < SIZE - 1 && board[i][j] == board[i + 1][j]) return false; // Adjacent vertical tiles can merge       //sameee
+        }
+    }
+    return true; // No moves left        //no space left
+}
+
+    private void addRandomTile() {      //addRandomTile mthd for adding a random tile      
+        int emptyCells = 0;             //counter variable initialize to 0
+        for (int[] row : board) {        //This loop iterates over each row in the board.
+            for (int cell : row) {       //This loop iterates over each cell in the current row.
+                if (cell == 0) emptyCells++; //If the cell is empty, the emptyCells counter is incremented by 1.
+            }
+        }
+        if (emptyCells == 0) return;      //if the counter is 0 then return---- exits immediately
+        int position = random.nextInt(emptyCells);   //generates a random integer in the range [0, emptyCells - 1]
+        for (int i = 0; i < SIZE; i++) {              //i = row
+            for (int j = 0; j < SIZE; j++) {          //j = col
+                if (board[i][j] == 0) {               //check if that cell is empty(0)
+                    if (position == 0) {             //if that position is not equal then dec orelse random
+                        board[i][j] = random.nextInt(10) == 0 ? 4 : 2;  //after dec pos becomes 0 then add random
+                        return;                         //exit loop
+                    }
+                    position--;
+                }
+            }
+        }
+    }
+
+    private boolean moveLeft() {               //moveleft mthd
+       boolean moved = false;                 //false pakad ke chalo    no tiles have moved
+        for (int i = 0; i < SIZE; i++) {      //row
+            moved |= mergeRowLeft(board[i]);   //mergeRowLeft function ko call kiya hai passed parameter is array ka row  | ye true return krta hai bitwise or operator hai agar ek bhi row change hua toh true
+        }
+        return moved;                        //return karo moved
+    }
+
+    private boolean moveRight() {             //moveright wala mthd
+        boolean moved = false;                 //no one moved
+        for (int i = 0; i < SIZE; i++) {       //row
+            reverseRow(board[i]);                //reverseRow function call kiya hai   sameeeee
+            moved |= mergeRowLeft(board[i]);     //merge kara
+            reverseRow(board[i]);             //firse reverse    2 0 0 2   2 0 0 2   4 0 0 0   0 0 0 4
+        }
+        return moved;                       //moved return karo
+    }
+
+
+    private boolean moveUp() {           //moveUp mthd to move up
+        boolean moved = false;           //no one moved
+        for (int i = 0; i < SIZE; i++) {    //row
+            int[] column = getColumn(i);   //Take the whole column as array and perform left it will look like done upwards like col 0 is 2 0 0 2  then array would be [ 2 0 0 2 ] now perform left that is [4 0 0 0] now pla
+            moved |= mergeRowLeft(column); //left      | bitwise or operator returning true if anyone condition is true
+            setColumn(i, column);      //(0 , 4 0 0 0)  then new first col will be 4 0 0 0
+        }
+        return moved;          //return moved 
+    }
+
+    private boolean moveDown() {          //moveDown method to move down
+        boolean moved = false;                  //no one moves
+        for (int i = 0; i < SIZE; i++) {           //row
+            int[] column = getColumn(i);         //make each col an array
+            reverseRow(column);                     // 2 2 0 0 then array [0 0 2 2] now after reverse do left [4 0 0 0] now do reverse again [0 0 0 4]
+            moved |= mergeRowLeft(column);
+            reverseRow(column);
+            setColumn(i, column);               //(0 , 0 0 0 4) new 0th col becomes 0 0 0 4 
+        }
+        return moved;
+    }
+
+//up aur left thik se ho jata hai
+//down aur right ke liye pehle reverse karo fir left then again reverse
+
+    private boolean mergeRowLeft(int[] row) {               //to merge left
+        boolean moved = false;                                       //no one moves
+        int[] newRow = new int[SIZE];                              //new row ek array banaya use memory diya
+        int index = 0;                                                     //variable 
+        for (int i = 0; i < SIZE; i++) {                             //loop
+            if (row[i] != 0) {                                              //if not empty then check
+                if (index > 0 && newRow[index - 1] == row[i]) {                    //can the current and previous one merge
+                    newRow[index - 1] *= 2;                                            //after merging replace its double that is 2 2 merge to 4
+                    moved = true;                                                    //moved will be true
+                } else {
+                    newRow[index++] = row[i];                            //if empty hai toh direct value daal do then inc (post inc)
+                }
+            }
+        }
+        for (int i = 0; i < SIZE; i++) {                   //loop
+            if (row[i] != newRow[i]) {                   //if row and new row are different then matlab move hua hai
+                moved = true;                               //make moved true
+                row[i] = newRow[i];                     //newrow ab row banega
+
+            }
+        }
+        return moved;
+    }
+
+    private void reverseRow(int[] row) {                 
+        int start = 0;
+        int end = SIZE - 1;
+        while (start < end) {                       //simple swapping
+            int temp = row[start];
+            row[start] = row[end];
+            row[end] = temp;
+            start++;
+            end--;
+        }
+    }
+
+    private int[] getColumn(int index) {                 //har col ko col array banane ke liye
+        int[] column = new int[SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            column[i] = board[i][index];
+        }
+        return column;
+    }
+
+    private void setColumn(int index, int[] column) {
+        for (int i = 0; i < SIZE; i++) {
+            board[i][index] = column[i];                      //har col array ko col banane ke liye
+        }
+    }
+
+    
+    public static void main(String[] args) {
+        new Game1024().play();
+    }
+}
